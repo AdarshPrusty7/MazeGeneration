@@ -1,57 +1,82 @@
 
-import javax.swing.*;
 import java.util.Stack;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class Maze extends JComponent {
-
-    public static void main (String[] args){
-
-    }
+public class Maze {
+    private int width;
+    private int height;
+    private final Cell[][] finishedMaze;
 
     Maze (int width, int height) {
-
+        this.width = width;
+        this.height = height;
         Cell[][] skeletonMaze = new Cell[width][height];
 
-        int randomX = ThreadLocalRandom.current().nextInt(0, width);
-        int randomY = ThreadLocalRandom.current().nextInt(0, height);
-        Cell startingCell = skeletonMaze[randomX][randomY];
+        int randomX = ThreadLocalRandom.current().nextInt(width);
+        int randomY = ThreadLocalRandom.current().nextInt(height);
 
-        DFSGen(startingCell);
+        Cell startingCell = new Cell(randomX, randomY);
+        skeletonMaze[randomX][randomY] = startingCell;
+
+
+        this.finishedMaze = DFSGen(startingCell, skeletonMaze);
+        System.out.println("Maze finished");
     }
 
-    Maze DFSGen (Cell startingCell) {
+    Cell[][] DFSGen (Cell startingCell, Cell[][] skeletonMaze) {
         Stack<Cell> cellStack = new Stack<>();
 
-        //startingCell.visited();
-
         cellStack.push(startingCell);
-
-        //Cell newCell = startingCell.getUnvistedNeighbour();
-
-        // Break
-
+        Cell cell = startingCell;
+        Cell badCell = new Cell(-1, -1);
+        cell.initNeighbours(width-1, height-1, badCell, skeletonMaze);
 
         while (!cellStack.isEmpty()) {
-            Cell cell = cellStack.pop();
             cell.visited();
-
-
-
-
-            /*if (newCell == null) { // If newCell's neighbours have already been visited
-                cellStack.pop();
-                newCell = cellStack.peek(); // newCell is now the previous cell
-
-                newCell = newCell.getUnvistedNeighbour();
+            Cell nextCell = cell.getUnvisitedNeighbour();
+            if (nextCell != null) {
+                nextCell.initNeighbours(width-1, height-1, cell, skeletonMaze);
+                WallBreaker(cell, nextCell);
+                cellStack.add(cell);
+                cell = nextCell;
             } else {
-                newCell.visited();
-                cellStack.push(newCell);*/
+                cell = cellStack.pop();
             }
-
         }
 
+        return skeletonMaze;
     }
 
+    String FindCellRelation(Cell startCell, Cell endCell) {
+        if (startCell.getxPos() == endCell.getxPos()) {
+            if (startCell.getyPos() < endCell.getyPos()) {
+                return "north";
+            } else {
+                return "south";
+            }
+        } else if (startCell.getxPos() < endCell.getxPos()) {
+            return "east";
+        } else {
+            return "west";
+        }
+    }
 
+    void WallBreaker(Cell cell, Cell nextCell) {
+        switch (FindCellRelation(cell, nextCell)) {
+            case "north":
+                cell.setNorthWall(false);
+                nextCell.setSouthWall(false);
+                break;
+            case "south":
+                cell.setSouthWall(false);
+                nextCell.setNorthWall(false);
+                break;
+            case "east":
+                cell.setEastWall(false);
+                nextCell.setWestWall(false);
+            case "west":
+                cell.setWestWall(false);
+                nextCell.setEastWall(false);
+        }
+    }
 }
