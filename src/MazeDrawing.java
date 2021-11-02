@@ -9,7 +9,7 @@ public class MazeDrawing extends JPanel {
 
     public MazeDrawing(int width, int height) {
         this.maze = new Maze(width, height);
-        this.windowHeight = 800;
+        this.windowHeight = 500;
         this.windowWidth = 1500;
     }
 
@@ -18,7 +18,7 @@ public class MazeDrawing extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setStroke(new BasicStroke(3f));
 
-        int multiplier = Math.min(800/maze.getHeight(), 1500/ maze.getWidth());
+        int multiplier = Math.min(windowHeight/maze.getHeight(), windowWidth/ maze.getWidth());
         int adjustor = 50;
 
         for (int col=0; col<maze.getWidth(); col++) {

@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class Cell {
     private int xPos;
@@ -22,9 +23,15 @@ public class Cell {
     }
 
     public Cell getUnvisitedNeighbour(){
-        for (Cell c : neighbours) {
-            if (c.isVisited() == false) {
-                return c;
+        ArrayList<Cell> unvisitedNeighbours = neighbours;
+
+        while (!unvisitedNeighbours.isEmpty()) {
+            int index = ThreadLocalRandom.current().nextInt(unvisitedNeighbours.size());
+            Cell cell = unvisitedNeighbours.get(index);
+            if (cell.isVisited) {
+                unvisitedNeighbours.remove(index);
+            } else {
+                return cell;
             }
         }
         return null;
