@@ -74,9 +74,23 @@ public class Maze {
             case "east":
                 cell.setEastWall(false);
                 nextCell.setWestWall(false);
+                break;
             case "west":
                 cell.setWestWall(false);
                 nextCell.setEastWall(false);
+                break;
         }
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
+    }
+
+    public Cell[][] getFinishedMaze() {
+        return finishedMaze;
     }
 }
