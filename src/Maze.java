@@ -1,4 +1,5 @@
 
+import java.util.ArrayList;
 import java.util.Stack;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -19,7 +20,9 @@ public class Maze {
         skeletonMaze[randomX][randomY] = startingCell;
 
 
-        this.finishedMaze = DFSGen(startingCell, skeletonMaze);
+        Cell[][] closedMaze = DFSGen(startingCell, skeletonMaze);
+        entranceExitMaker(closedMaze);
+        this.finishedMaze = closedMaze;
         System.out.println("Maze finished");
     }
 
@@ -81,6 +84,66 @@ public class Maze {
                 break;
         }
     }
+
+    public void entranceExitMaker(Cell[][] closedMaze){
+        ArrayList<Cell> horiCells = new ArrayList<>();
+        ArrayList<Cell> vertCells = new ArrayList<>();
+
+        for (int col = 0; col<width; col++){
+            horiCells.add(closedMaze[col][0]);
+            horiCells.add(closedMaze[col][height-1]);
+        }
+        for (int row = 1; row<height-1; row++){
+            vertCells.add(closedMaze[0][row]);
+            vertCells.add(closedMaze[width-1][row]);
+        }
+
+        Cell cellStart;
+        Cell cellEnd;
+        for (int i = 0 ; i<2 ; i++) {
+            if (ThreadLocalRandom.current().nextInt(2) == 0) {
+                int index1 = ThreadLocalRandom.current().nextInt(horiCells.size());
+                if (i==0) {
+                    cellStart = horiCells.get(index1);
+                    horiCellBreaker(cellStart);
+                    horiCells.remove(index1);
+                } else {
+                    cellEnd = horiCells.get(index1);
+                    horiCellBreaker(cellEnd);
+                    horiCells.remove(index1);
+                }
+            } else {
+                int index1 = ThreadLocalRandom.current().nextInt(vertCells.size());
+                if (i==0) {
+                    cellStart = vertCells.get(index1);
+                    vertCellBreaker(cellStart);
+                    vertCells.remove(index1);
+
+                } else {
+                    cellEnd = vertCells.get(index1);
+                    vertCellBreaker(cellEnd);
+                    vertCells.remove(index1);
+                }
+            }
+        }
+    }
+
+    public void horiCellBreaker (Cell cell) {
+        if (cell.getyPos() == 0) {
+            cell.setSouthWall(false);
+        } else {
+            cell.setNorthWall(false);
+        }
+    }
+
+    public void vertCellBreaker (Cell cell) {
+        if (cell.getxPos() == 0) {
+            cell.setWestWall(false);
+        } else {
+            cell.setEastWall(false);
+        }
+    }
+
 
     public int getWidth() {
         return width;

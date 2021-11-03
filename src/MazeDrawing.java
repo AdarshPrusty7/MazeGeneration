@@ -1,6 +1,8 @@
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 public class MazeDrawing extends JPanel {
     private Maze maze;
@@ -8,6 +10,7 @@ public class MazeDrawing extends JPanel {
     private int windowWidth;
 
     public MazeDrawing(int width, int height) {
+
         this.maze = new Maze(width, height);
         this.windowHeight = 500;
         this.windowWidth = 1500;
@@ -27,19 +30,31 @@ public class MazeDrawing extends JPanel {
 
 
                 if (cell.isNorthWall()){
-                    g2d.drawLine(cell.getxPos()*multiplier+adjustor,(cell.getyPos()+1)*multiplier+adjustor,(cell.getxPos()+1)*multiplier+adjustor,(cell.getyPos()+1)*multiplier+adjustor);
+                    g2d.drawLine(cell.getxPos()*multiplier,(cell.getyPos()+1)*multiplier,(cell.getxPos()+1)*multiplier,(cell.getyPos()+1)*multiplier);
                 }
                 if (cell.isSouthWall()){
-                    g2d.drawLine(cell.getxPos()*multiplier+adjustor,(cell.getyPos())*multiplier+adjustor,(cell.getxPos()+1)*multiplier+adjustor,(cell.getyPos())*multiplier+adjustor);
+                    g2d.drawLine(cell.getxPos()*multiplier,(cell.getyPos())*multiplier,(cell.getxPos()+1)*multiplier,(cell.getyPos())*multiplier);
                 }
                 if (cell.isEastWall()) {
-                    g2d.drawLine((cell.getxPos()+1)*multiplier+adjustor,(cell.getyPos())*multiplier+adjustor,(cell.getxPos()+1)*multiplier+adjustor,(cell.getyPos()+1)*multiplier+adjustor );
+                    g2d.drawLine((cell.getxPos()+1)*multiplier,(cell.getyPos())*multiplier,(cell.getxPos()+1)*multiplier,(cell.getyPos()+1)*multiplier );
                 }
                 if (cell.isWestWall()) {
-                    g2d.drawLine((cell.getxPos())*multiplier+adjustor,(cell.getyPos())*multiplier+adjustor,(cell.getxPos())*multiplier+adjustor,(cell.getyPos()+1)*multiplier+adjustor );
+                    g2d.drawLine((cell.getxPos())*multiplier,(cell.getyPos())*multiplier,(cell.getxPos())*multiplier,(cell.getyPos()+1)*multiplier );
                 }
             }
         }
+        this.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                super.componentResized(e);
+                int height = g2d.getClipBounds().height;
+                int width = g2d.getClipBounds().width;
+
+                g2d.scale(width, height);
+            }
+        });
+
+
     }
 
     public int getWindowHeight() {
@@ -48,5 +63,9 @@ public class MazeDrawing extends JPanel {
 
     public int getWindowWidth() {
         return windowWidth;
+    }
+
+    public Maze getMaze() {
+        return maze;
     }
 }
