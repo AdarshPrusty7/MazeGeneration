@@ -219,6 +219,22 @@ public class MazeApp extends JPanel{
             heightTextStrip = "5";
         }
 
+        boolean tooSmall = false;
+        if (widthTextStrip.equals("1")) {
+            widthField.setText("5");
+            widthTextStrip = "5";
+            tooSmall = true;
+        }
+        if (heightTextStrip.equals("1")) {
+            heightField.setText("5");
+            heightTextStrip = "5";
+            tooSmall = true;
+        }
+
+        if (tooSmall) {
+            JOptionPane.showMessageDialog(null, "Value chosen was too small. Defaulted to 5.");
+        }
+
         String finalWidth = firstTwo(widthTextStrip);
         String finalHeight = firstTwo(heightTextStrip);
 

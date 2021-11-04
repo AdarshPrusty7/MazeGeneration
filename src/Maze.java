@@ -100,29 +100,49 @@ public class Maze {
 
         Cell cellStart;
         Cell cellEnd;
-        for (int i = 0 ; i<2 ; i++) {
-            if (ThreadLocalRandom.current().nextInt(2) == 0) {
-                int index1 = ThreadLocalRandom.current().nextInt(horiCells.size());
-                if (i==0) {
-                    cellStart = horiCells.get(index1);
-                    horiCellBreaker(cellStart);
-                    horiCells.remove(index1);
-                } else {
-                    cellEnd = horiCells.get(index1);
-                    horiCellBreaker(cellEnd);
-                    horiCells.remove(index1);
-                }
-            } else {
-                int index1 = ThreadLocalRandom.current().nextInt(vertCells.size());
-                if (i==0) {
-                    cellStart = vertCells.get(index1);
-                    vertCellBreaker(cellStart);
-                    vertCells.remove(index1);
 
+        if (horiCells.size() + vertCells.size() < 5) {
+            ArrayList<Cell> allCells = new ArrayList<>();
+            allCells.addAll(horiCells);
+            allCells.addAll(vertCells);
+
+            for (int x = 0; x<2 ; x++) {
+                int index = ThreadLocalRandom.current().nextInt(allCells.size());
+                if (x==0) {
+                    cellStart = allCells.get(index);
+                    horiCellBreaker(cellStart);
+                    allCells.remove(index);
                 } else {
-                    cellEnd = vertCells.get(index1);
+                    cellEnd = allCells.get(index);
                     vertCellBreaker(cellEnd);
-                    vertCells.remove(index1);
+                    allCells.remove(index);
+                }
+            }
+        } else {
+            for (int i = 0; i < 2; i++) { //do two times
+                if (ThreadLocalRandom.current().nextInt(2) == 0) { // if 0=choose hori cell or 1= choose vert cell
+                    int index1 = ThreadLocalRandom.current().nextInt(horiCells.size());
+                    if (i == 0) {
+                        cellStart = horiCells.get(index1);
+                        horiCellBreaker(cellStart);
+                        horiCells.remove(index1);
+                    } else {
+                        cellEnd = horiCells.get(index1);
+                        horiCellBreaker(cellEnd);
+                        horiCells.remove(index1);
+                    }
+                } else {
+                    int index1 = ThreadLocalRandom.current().nextInt(vertCells.size());
+                    if (i == 0) {
+                        cellStart = vertCells.get(index1);
+                        vertCellBreaker(cellStart);
+                        vertCells.remove(index1);
+
+                    } else {
+                        cellEnd = vertCells.get(index1);
+                        vertCellBreaker(cellEnd);
+                        vertCells.remove(index1);
+                    }
                 }
             }
         }
