@@ -4,19 +4,10 @@ import net.miginfocom.swing.MigLayout;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.lang.reflect.Array;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.swing.*;
-import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
-import javax.swing.text.AbstractDocument;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.DocumentFilter;
-
 
 public class MazeApp extends JPanel{
     int jPanelHeight = 400;
@@ -31,7 +22,6 @@ public class MazeApp extends JPanel{
     }
 
     private BufferedImage createImage(Maze maze) {
-        Dimension d = getWindowSize();
 
         BufferedImage bufferedImage = new BufferedImage(2002, 2002, BufferedImage.TYPE_BYTE_BINARY);
         Graphics g = bufferedImage.getGraphics();
@@ -185,19 +175,6 @@ public class MazeApp extends JPanel{
         gbc.fill = GridBagConstraints.RELATIVE;
         frame.getContentPane().add(jPanel, gbc);
 
-        /*JPanel jp = new JPanel();
-        jp.setBackground(Color.pink);
-        gbc.gridx = 0;
-        frame.getContentPane().add(jp, gbc);
-        gbc.gridx = 3;
-
-        jp.setBackground(Color.magenta);
-        gbc.gridx = 1;
-        frame.getContentPane().add(jp, gbc);
-        gbc.gridx = 4;
-        frame.getContentPane().add(jp, gbc);*/
-
-
         frame.addComponentListener(new ComponentAdapter() {
             public void componentResized (ComponentEvent componentEvent) {
                 windowResizing(jPanel, toolPanel, frame, image);
@@ -287,6 +264,4 @@ public class MazeApp extends JPanel{
     public static void main (String[] args) {
         MazeApp mazeApp = new MazeApp();
     }
-
-
 }
