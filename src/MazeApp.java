@@ -1,27 +1,17 @@
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridBagLayout;
-import java.awt.Image;
-import java.awt.Rectangle;
-import java.awt.Toolkit;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
+import net.miginfocom.swing.MigLayout;
+
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
 
 
 public class MazeApp extends JPanel{
-    int windowHeight = 400;
-    int windowWidth = 300;
+    int jPanelHeight = 400;
+    int jPanelWidth = 300;
     private BufferedImage imageToDraw;
 
     @Override
@@ -33,8 +23,7 @@ public class MazeApp extends JPanel{
 
     private BufferedImage createImage(Maze maze) {
         Dimension d = getWindowSize();
-        int size = Math.min(d.width, d.height) + 2;
-        BufferedImage bufferedImage = new BufferedImage(size, size, BufferedImage.TYPE_BYTE_BINARY);
+        BufferedImage bufferedImage = new BufferedImage(2002, 2002, BufferedImage.TYPE_BYTE_BINARY);
         Graphics g = bufferedImage.getGraphics();
 
         g.setColor(Color.WHITE);
@@ -43,11 +32,11 @@ public class MazeApp extends JPanel{
 
         Graphics2D g2d = (Graphics2D) g;
 
-        g2d.setStroke(new BasicStroke(3f));
+        g2d.setStroke(new BasicStroke(30f));
 
 
-        int multiplier = Math.min((d.height)/maze.getHeight(), (d.width)/ maze.getWidth());
-        int adjustor = 50;
+        int multiplier = Math.min(2000/maze.getHeight(), 2000/ maze.getWidth());
+
 
         for (int col=0; col<maze.getWidth(); col++) {
             for (int row=0; row<maze.getHeight(); row++) {
@@ -68,68 +57,120 @@ public class MazeApp extends JPanel{
                 }
             }
         }
+        //g2d.dispose();
+        //g.dispose();
+        this.imageToDraw = bufferedImage;
         return bufferedImage;
     }
 
     private Dimension getWindowSize() {
-        return new Dimension (this.windowWidth-10, this.windowHeight-10);
+        return new Dimension (this.jPanelWidth, this.jPanelHeight);
     }
 
 
-    public void scaleImage (int oldW, int oldH, int newW, int newH) {
-        float propH = (float) newH/oldH;
-        float propW = (float) newW/oldW;
-        System.out.println(propW + " " + propH);
+    public BufferedImage scaleImage () {
 
-        BufferedImage newImage = new BufferedImage(newW, newH, BufferedImage.SCALE_FAST);
+        int size = Math.min(this.jPanelWidth, this.jPanelHeight);
+        int calcSize = (int) Math.round(size*0.9);
+        BufferedImage newImage = new BufferedImage(calcSize, calcSize, BufferedImage.TYPE_BYTE_BINARY);
 
         Graphics2D g = newImage.createGraphics();
-        g.scale(propW, propH);
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+        g.drawImage(imageToDraw, 0, 0, calcSize, calcSize, null);
         g.dispose();
-        this.imageToDraw = newImage;
+
+        return newImage;
     }
 
     public MazeApp(){
-        Maze maze = new Maze(10, 10);
+        int mazeW = 5;
+        int mazeH = 5;
+
+        Maze maze = new Maze(mazeW, mazeH);
 
         JFrame frame = new JFrame();
-        Dimension d = new Dimension(300, 400);
+        Dimension d = new Dimension(450, 450);
 
         frame.getContentPane().setLayout(new GridBagLayout());
-        frame.setMinimumSize(d);
 
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setVisible(true);
-
+        GridBagConstraints gbc = new GridBagConstraints();
+        
         this.imageToDraw = createImage(maze);
-        JLabel image = new JLabel(new ImageIcon(imageToDraw));
 
-        frame.getContentPane().add(image);
+        JPanel jPanel = new JPanel();
+        jPanel.setLayout(new MigLayout());
 
-        /*
+        JLabel image = new JLabel(new ImageIcon(scaleImage()));
+        image.setBorder(new EmptyBorder(5,5,5,5));
+        jPanel.add(image, "push, align center");
+
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.setFocusable(false);
+        refreshButton.setMnemonic(KeyEvent.VK_R);
+        refreshButton.setToolTipText("Get new maze.");
+        refreshButton.setFont(new Font("Calibri", Font.PLAIN, 18));
+        refreshButton.setMargin(new Insets(3,3,3,3));
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        frame.getContentPane().add(refreshButton, gbc);
+        gbc.gridy = 1;
+        frame.getContentPane().add(new JPanel(), gbc);
+        gbc.gridy = 2;
+        gbc.fill = GridBagConstraints.RELATIVE;
+
+        frame.getContentPane().add(jPanel, gbc);
+
         frame.addComponentListener(new ComponentAdapter() {
             public void componentResized (ComponentEvent componentEvent) {
-                Rectangle r = frame.getBounds();
-                int oldWidth = windowWidth;
-                int oldHeight = windowHeight;
-                windowWidth = r.width;
-                windowHeight = r.height;
-
-                scaleImage (oldWidth-10, oldHeight-10, windowWidth-10, windowHeight-10);
-
-                frame.remove(image);
-                JLabel image = new JLabel(new ImageIcon(imageToDraw));
-                frame.getContentPane().add(image);
-
+                windowResizing(jPanel, frame, image);
             }
-        });*/
+        });
 
+        refreshButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("Test");
+
+                Maze newMaze = new Maze(mazeW, mazeH);
+                imageToDraw = createImage(newMaze);
+                windowResizing(jPanel, frame, image);
+            }
+        });
+
+
+        frame.pack();
+        frame.setMinimumSize(d);
+        frame.setPreferredSize(d);
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
+
+    private void windowResizing(JPanel jPanel, JFrame frame, JLabel image){
+        Rectangle r = jPanel.getBounds();
+        jPanelWidth = r.width;
+        jPanelHeight = r.height;
+
+        Rectangle re = frame.getBounds();
+
+
+        System.out.println("JPanel: " + jPanelWidth + " " + jPanelHeight);
+        System.out.println("JFrame: " + re.width + " " + re.height);
+
+
+        image.setIcon(new ImageIcon(scaleImage()));
+        frame.repaint();
+        jPanel.setMinimumSize(new Dimension((int) Math.round(re.width*0.8), (int) Math.round(re.height*0.8)));
+        jPanel.setPreferredSize(new Dimension((int) Math.round(re.width*0.8), (int) Math.round(re.height*0.8)));
+
+        image.setMinimumSize(new Dimension((int) Math.round(r.width*1), (int) Math.round(r.height*1)));
+        image.setPreferredSize(new Dimension((int) Math.round(r.width*1), (int) Math.round(r.height*1)));
+    }
+
 
     public static void main (String[] args) {
         MazeApp mazeApp = new MazeApp();
-
-
     }
 
 
