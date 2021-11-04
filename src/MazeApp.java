@@ -4,9 +4,18 @@ import net.miginfocom.swing.MigLayout;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
+import java.lang.reflect.Array;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
 
 
 public class MazeApp extends JPanel{
@@ -23,6 +32,7 @@ public class MazeApp extends JPanel{
 
     private BufferedImage createImage(Maze maze) {
         Dimension d = getWindowSize();
+
         BufferedImage bufferedImage = new BufferedImage(2002, 2002, BufferedImage.TYPE_BYTE_BINARY);
         Graphics g = bufferedImage.getGraphics();
 
@@ -32,11 +42,21 @@ public class MazeApp extends JPanel{
 
         Graphics2D g2d = (Graphics2D) g;
 
-        g2d.setStroke(new BasicStroke(30f));
 
+        float strokeSize = Math.min(1000/maze.getHeight(), 1000/ maze.getWidth());
+        g2d.setStroke(new BasicStroke(strokeSize));
 
-        int multiplier = Math.min(2000/maze.getHeight(), 2000/ maze.getWidth());
+        int multiplier = Math.min(2000/maze.getWidth(), 2000/maze.getHeight());
+        int adjustorX = 0;
+        int adjustorY = 0;
 
+        if (maze.getHeight() != maze.getWidth()) {
+            if (maze.getHeight() < maze.getWidth()) {
+                adjustorY = (1000*(maze.getWidth() - maze.getHeight()))/ maze.getWidth();
+            } else {
+                adjustorX = (1000*(maze.getHeight() - maze.getWidth()))/ maze.getHeight();
+            }
+        }
 
         for (int col=0; col<maze.getWidth(); col++) {
             for (int row=0; row<maze.getHeight(); row++) {
@@ -44,21 +64,21 @@ public class MazeApp extends JPanel{
 
 
                 if (cell.isNorthWall()){
-                    g2d.drawLine(cell.getxPos()*multiplier,(cell.getyPos()+1)*multiplier,(cell.getxPos()+1)*multiplier,(cell.getyPos()+1)*multiplier);
+                    g2d.drawLine((cell.getxPos()*multiplier)+adjustorX,((cell.getyPos()+1)*multiplier)+adjustorY,((cell.getxPos()+1)*multiplier)+adjustorX,((cell.getyPos()+1)*multiplier)+adjustorY);
                 }
                 if (cell.isSouthWall()){
-                    g2d.drawLine(cell.getxPos()*multiplier,(cell.getyPos())*multiplier,(cell.getxPos()+1)*multiplier,(cell.getyPos())*multiplier);
+                    g2d.drawLine((cell.getxPos()*multiplier)+adjustorX,((cell.getyPos())*multiplier)+adjustorY,((cell.getxPos()+1)*multiplier)+adjustorX,((cell.getyPos())*multiplier)+adjustorY);
                 }
                 if (cell.isEastWall()) {
-                    g2d.drawLine((cell.getxPos()+1)*multiplier,(cell.getyPos())*multiplier,(cell.getxPos()+1)*multiplier,(cell.getyPos()+1)*multiplier );
+                    g2d.drawLine(((cell.getxPos()+1)*multiplier)+adjustorX,((cell.getyPos())*multiplier)+adjustorY,((cell.getxPos()+1)*multiplier)+adjustorX,((cell.getyPos()+1)*multiplier )+adjustorY);
                 }
                 if (cell.isWestWall()) {
-                    g2d.drawLine((cell.getxPos())*multiplier,(cell.getyPos())*multiplier,(cell.getxPos())*multiplier,(cell.getyPos()+1)*multiplier );
+                    g2d.drawLine(((cell.getxPos())*multiplier)+adjustorX,((cell.getyPos())*multiplier)+adjustorY,((cell.getxPos())*multiplier)+adjustorX,((cell.getyPos()+1)*multiplier )+adjustorY);
                 }
             }
         }
-        //g2d.dispose();
-        //g.dispose();
+        g2d.dispose();
+        g.dispose();
         this.imageToDraw = bufferedImage;
         return bufferedImage;
     }
@@ -95,11 +115,13 @@ public class MazeApp extends JPanel{
         frame.getContentPane().setLayout(new GridBagLayout());
 
         GridBagConstraints gbc = new GridBagConstraints();
-        
+
         this.imageToDraw = createImage(maze);
 
         JPanel jPanel = new JPanel();
         jPanel.setLayout(new MigLayout());
+
+        JPanel toolPanel = new JPanel();
 
         JLabel image = new JLabel(new ImageIcon(scaleImage()));
         image.setBorder(new EmptyBorder(5,5,5,5));
@@ -112,30 +134,86 @@ public class MazeApp extends JPanel{
         refreshButton.setFont(new Font("Calibri", Font.PLAIN, 18));
         refreshButton.setMargin(new Insets(3,3,3,3));
 
+        JFormattedTextField widthField = new JFormattedTextField(NumberFormat.getNumberInstance());
+        JFormattedTextField heightField = new JFormattedTextField(NumberFormat.getNumberInstance());
+
+        // ADDING ALL ELEMENTS
+
+        // adding toolPanel
         gbc.gridx = 0;
         gbc.gridy = 0;
-        frame.getContentPane().add(refreshButton, gbc);
+        gbc.gridwidth = 5;
+
+        frame.getContentPane().add(toolPanel, gbc);
+
+        //adding width label
+        gbc.anchor = GridBagConstraints.LINE_START;
+        toolPanel.add(new JLabel("Width"), gbc);
+
+        //adding width field
+
+        gbc.gridx = 1;
+        widthField.setEditable(true);
+        widthField.setPreferredSize(new Dimension(40, 30));
+        toolPanel.add(widthField, gbc);
+
+        //adding refresh button
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 2;
+        toolPanel.add(refreshButton, gbc);
+
+        //adding height field
+        gbc.anchor = GridBagConstraints.LINE_END;
+        gbc.gridx = 3;
+        heightField.setEditable(true);
+        heightField.setPreferredSize(new Dimension(40, 30));
+        toolPanel.add(heightField, gbc);
+
+        // adding height label
+        gbc.gridx = 4;
+        toolPanel.add(new JLabel("Height"), gbc);
+
+        // adding spacer between toolbar and main content
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridwidth = GridBagConstraints.RELATIVE;
+        gbc.gridx = 2;
         gbc.gridy = 1;
         frame.getContentPane().add(new JPanel(), gbc);
+
+        // adding main content panel
         gbc.gridy = 2;
         gbc.fill = GridBagConstraints.RELATIVE;
-
         frame.getContentPane().add(jPanel, gbc);
+
+        /*JPanel jp = new JPanel();
+        jp.setBackground(Color.pink);
+        gbc.gridx = 0;
+        frame.getContentPane().add(jp, gbc);
+        gbc.gridx = 3;
+
+        jp.setBackground(Color.magenta);
+        gbc.gridx = 1;
+        frame.getContentPane().add(jp, gbc);
+        gbc.gridx = 4;
+        frame.getContentPane().add(jp, gbc);*/
+
 
         frame.addComponentListener(new ComponentAdapter() {
             public void componentResized (ComponentEvent componentEvent) {
-                windowResizing(jPanel, frame, image);
+                windowResizing(jPanel, toolPanel, frame, image);
             }
         });
 
         refreshButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println("Test");
+                System.out.println("Button Pressed");
 
-                Maze newMaze = new Maze(mazeW, mazeH);
+                ArrayList<Integer> mazeDimensions = getNewMazeDimensions(widthField, heightField);
+
+                Maze newMaze = new Maze(mazeDimensions.get(0), mazeDimensions.get(1));
                 imageToDraw = createImage(newMaze);
-                windowResizing(jPanel, frame, image);
+                windowResizing(jPanel, toolPanel, frame, image);
             }
         });
 
@@ -147,7 +225,41 @@ public class MazeApp extends JPanel{
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    private void windowResizing(JPanel jPanel, JFrame frame, JLabel image){
+    private ArrayList<Integer> getNewMazeDimensions(JFormattedTextField widthField, JFormattedTextField heightField) {
+        ArrayList<Integer> mazeDimensions = new ArrayList<>();
+
+        String widthText = widthField.getText();
+        String heightText = heightField.getText();
+        String widthTextStrip = widthText.replaceAll("[^\\d]", "");
+        String heightTextStrip = heightText.replaceAll("[^\\d]", "");
+
+        if (widthTextStrip.equals("")) {
+            widthField.setText("5");
+            widthTextStrip = "5";
+        }
+        if (heightTextStrip.equals("")) {
+            heightField.setText("5");
+            heightTextStrip = "5";
+        }
+
+        String finalWidth = firstTwo(widthTextStrip);
+        String finalHeight = firstTwo(heightTextStrip);
+
+        widthField.setText(finalWidth);
+        heightField.setText(finalHeight);
+
+        mazeDimensions.add(Integer.parseInt(finalWidth));
+        mazeDimensions.add(Integer.parseInt(finalHeight));
+
+        return mazeDimensions;
+    }
+
+    public String firstTwo(String str) {
+        return str.length() < 2 ? str : str.substring(0, 2);
+    }
+
+
+    private void windowResizing(JPanel jPanel, JPanel toolPanel, JFrame frame, JLabel image){
         Rectangle r = jPanel.getBounds();
         jPanelWidth = r.width;
         jPanelHeight = r.height;
@@ -163,6 +275,9 @@ public class MazeApp extends JPanel{
         frame.repaint();
         jPanel.setMinimumSize(new Dimension((int) Math.round(re.width*0.8), (int) Math.round(re.height*0.8)));
         jPanel.setPreferredSize(new Dimension((int) Math.round(re.width*0.8), (int) Math.round(re.height*0.8)));
+
+        toolPanel.setMinimumSize(new Dimension((int) Math.round(re.width*0.8), 50));
+        toolPanel.setPreferredSize(new Dimension((int) Math.round(re.width*0.8), 50));
 
         image.setMinimumSize(new Dimension((int) Math.round(r.width*1), (int) Math.round(r.height*1)));
         image.setPreferredSize(new Dimension((int) Math.round(r.width*1), (int) Math.round(r.height*1)));
